@@ -44,6 +44,7 @@ from meshcore_bridge.config import BridgeConfig, DEFAULT_CONFIG_PATH, resolve_br
 from meshcore_bridge.bridge_engine import BridgeEngine
 from meshcore_bridge.device_reader import read_device_identity, read_device_channels
 from meshcore_bridge.gui.dashboard import BridgeDashboard
+from meshcore_bridge.public_status import register_public_status_routes
 
 
 # Global dashboard instance (needed by NiceGUI page decorator)
@@ -224,6 +225,9 @@ def main():
 
     # ── Create BridgeEngine ──
     engine = BridgeEngine(shared_a, shared_b, cfg)
+
+    # ── Register safe public read-only status endpoints ──
+    register_public_status_routes(shared_a, shared_b, engine, cfg)
 
     # ── Create and start workers (one per device) ──
     gui_config.SERIAL_BAUDRATE = cfg.device_a.baud
