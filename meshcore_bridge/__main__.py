@@ -21,6 +21,8 @@ Usage:
                 Copyright: (c) 2026 PE1HVH
 """
 
+import os
+import secrets
 import sys
 import threading
 import time
@@ -44,6 +46,7 @@ from meshcore_bridge.config import BridgeConfig, DEFAULT_CONFIG_PATH, resolve_br
 from meshcore_bridge.bridge_engine import BridgeEngine
 from meshcore_bridge.device_reader import read_device_identity, read_device_channels
 from meshcore_bridge.gui.dashboard import BridgeDashboard
+from meshcore_bridge.public_status import register_public_status_routes
 
 
 # Global dashboard instance (needed by NiceGUI page decorator)
@@ -75,6 +78,9 @@ def _print_usage():
     print(f"  Device identities : ~/.meshcore-gui/device_identity.json")
     print(f"  Bridge config     : {DEFAULT_CONFIG_PATH}")
     print(f"  Channel cache     : ~/.meschcore/cache/_dev_ttyUSBX.json")
+    print()
+    print("Environment:")
+    print("  NBC_BRIDGE_STORAGE_SECRET  Persistent NiceGUI storage secret")
     print()
     print("Examples:")
     print("  python meshcore_bridge.py")
@@ -225,6 +231,9 @@ def main():
     # ── Create BridgeEngine ──
     engine = BridgeEngine(shared_a, shared_b, cfg)
 
+    # ── Register safe public read-only status endpoints ──
+    register_public_status_routes(shared_a, shared_b, engine, cfg)
+
     # ── Create and start workers (one per device) ──
     gui_config.SERIAL_BAUDRATE = cfg.device_a.baud
     worker_a = create_worker(port_a, shared_a, baudrate=cfg.device_a.baud)
@@ -251,6 +260,14 @@ def main():
     _dashboard = BridgeDashboard(shared_a, shared_b, engine, cfg)
 
     # ── Start NiceGUI server (blocks) ──
+    storage_secret = os.environ.get("NBC_BRIDGE_STORAGE_SECRET")
+    if not storage_secret:
+        storage_secret = secrets.token_urlsafe(32)
+        print(
+            "WARNING: NBC_BRIDGE_STORAGE_SECRET is not set. "
+            "Using an ephemeral secret for this process."
+        )
+
     print(f"Starting GUI on port {cfg.gui_port}...")
     ui.run(
         show=False,
@@ -258,7 +275,7 @@ def main():
         title=cfg.gui_title,
         port=cfg.gui_port,
         reload=False,
-        storage_secret='meshcore-bridge-secret',
+        storage_secret=storage_secret,
     )
 
 
