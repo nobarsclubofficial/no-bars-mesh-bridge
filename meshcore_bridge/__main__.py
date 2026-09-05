@@ -21,6 +21,8 @@ Usage:
                 Copyright: (c) 2026 PE1HVH
 """
 
+import os
+import secrets
 import sys
 import threading
 import time
@@ -76,6 +78,9 @@ def _print_usage():
     print(f"  Device identities : ~/.meshcore-gui/device_identity.json")
     print(f"  Bridge config     : {DEFAULT_CONFIG_PATH}")
     print(f"  Channel cache     : ~/.meschcore/cache/_dev_ttyUSBX.json")
+    print()
+    print("Environment:")
+    print("  NBC_BRIDGE_STORAGE_SECRET  Persistent NiceGUI storage secret")
     print()
     print("Examples:")
     print("  python meshcore_bridge.py")
@@ -255,6 +260,14 @@ def main():
     _dashboard = BridgeDashboard(shared_a, shared_b, engine, cfg)
 
     # ── Start NiceGUI server (blocks) ──
+    storage_secret = os.environ.get("NBC_BRIDGE_STORAGE_SECRET")
+    if not storage_secret:
+        storage_secret = secrets.token_urlsafe(32)
+        print(
+            "WARNING: NBC_BRIDGE_STORAGE_SECRET is not set. "
+            "Using an ephemeral secret for this process."
+        )
+
     print(f"Starting GUI on port {cfg.gui_port}...")
     ui.run(
         show=False,
@@ -262,7 +275,7 @@ def main():
         title=cfg.gui_title,
         port=cfg.gui_port,
         reload=False,
-        storage_secret='meshcore-bridge-secret',
+        storage_secret=storage_secret,
     )
 
 
