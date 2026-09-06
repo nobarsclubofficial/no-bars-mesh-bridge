@@ -2,11 +2,11 @@
 Status panel — connection status for both bridge devices.
 
 Shows connectivity state, device info, radio frequency and
-bridge engine statistics in a layout consistent with the DOMCA
-theme used by meshcore_gui.
+bridge engine statistics in a layout consistent with the
+No Bars Club dashboard theme.
 """
 
-from typing import Dict, Optional
+from typing import Optional
 
 from nicegui import ui
 
@@ -16,11 +16,7 @@ from meshcore_bridge.config import BridgeConfig
 
 
 class StatusPanel:
-    """Connection status panel for the bridge dashboard.
-
-    Displays two device status cards (A and B) and a bridge
-    statistics summary card.
-    """
+    """Connection status panel for the bridge dashboard."""
 
     def __init__(
         self,
@@ -34,7 +30,6 @@ class StatusPanel:
         self._engine = engine
         self._cfg = config
 
-        # UI element references (populated by render)
         self._status_a: Optional[ui.label] = None
         self._status_b: Optional[ui.label] = None
         self._device_a_name: Optional[ui.label] = None
@@ -44,7 +39,6 @@ class StatusPanel:
         self._connected_a: Optional[ui.icon] = None
         self._connected_b: Optional[ui.icon] = None
 
-        # Stats labels
         self._fwd_count: Optional[ui.label] = None
         self._fwd_a_to_b: Optional[ui.label] = None
         self._fwd_b_to_a: Optional[ui.label] = None
@@ -63,7 +57,7 @@ class StatusPanel:
         """Render a single device status card."""
         with ui.card().classes("flex-1 min-w-[280px]"):
             with ui.row().classes("items-center gap-2 mb-2"):
-                icon = ui.icon("link", color="green").classes("text-lg")
+                icon = ui.icon("link", color="secondary").classes("text-lg")
                 ui.label(f"Device {side}").classes(
                     "text-sm font-bold"
                 ).style("font-family: 'JetBrains Mono', monospace")
@@ -90,7 +84,6 @@ class StatusPanel:
                     ui.label("Frequency:").classes("text-xs opacity-60 w-20")
                     freq_lbl = ui.label("-").classes("text-xs")
 
-            # Store references for updates
             if side == "A":
                 self._status_a = status_lbl
                 self._device_a_name = name_lbl
@@ -167,7 +160,7 @@ class StatusPanel:
         if icon:
             connected = snap.get("connected", False)
             icon.props(f'name={"link" if connected else "link_off"}')
-            icon._props["color"] = "green" if connected else "red"
+            icon._props["color"] = "secondary" if connected else "negative"
             icon.update()
 
     def _update_stats(self) -> None:
